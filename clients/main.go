@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	conn, err := grpc.NewClient("localhost:15003", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient("localhost:15002", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -23,11 +23,29 @@ func main() {
 	}
 
 	// ignore error handling here for brevity
-	stream.Send(&flight.HandshakeRequest{Payload: []byte("baz")})
-	exchange, _ := client.DoExchange(context.Background())
-	data := []byte("foo")
-	dt := flight.FlightData{DataBody: data}
-	err = exchange.Send(&dt)
-	resp, _ := stream.Recv()
-	fmt.Println(string(resp.Payload))
+	err = stream.Send(&flight.HandshakeRequest{Payload: []byte("foobaz")})
+	if err != nil {
+		return
+	}
+	ds, err := client.ListFlights(context.Background(), &flight.Criteria{})
+	if err != nil {
+		fmt.Println(err)
+	}
+	recv, err := ds.Recv()
+	if err != nil {
+		return
+	}
+
+	fmt.Println(string(recv.GetSchema()))
+
+	get, err := client.DoGet(context.Background(), &flight.Ticket{})
+	if err != nil {
+		return
+	}
+	data, err := get.Recv()
+	if err != nil {
+		return
+	}
+
+	fmt.Println(string(data.GetDataBody()))
 }

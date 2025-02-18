@@ -8,5 +8,6 @@ wheels/
 
 # venv
 .venv
+.env
 .idea
 .DS_Store
